@@ -10,7 +10,7 @@ import asyncio
 import os
 
 # ========== BASIC CONFIG ==========
-BOT_TOKEN = '7943158999:AAF6yInYNmene1iUtob_tdKTMUt3ss0uZLw'
+BOT_TOKEN = '7943158999:AAG5t9je40J4Sb1p6CaCLLEfRKtckp3JWtc'
 ADMIN_ID = 5359578794
 GROUP_IDS = [-1002690654446]
 INLINE_CHANNEL_LINK = "https://t.me/+aYrPdVod0_Y2NzY1"
