@@ -233,12 +233,7 @@ async def fetch_otps(app: Application):
 
     try:
         API_URL = "http://otpbotapi.42web.io/mainapi.php"
-        headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    'Accept': 'application/json',
-}
-resp = requests.get(API_URL, headers=headers, timeout=10)
-
+        resp = requests.get(API_URL, timeout=10)
         print("API Raw Response:\n", resp.text)
 
         data = json.loads(resp.text)
