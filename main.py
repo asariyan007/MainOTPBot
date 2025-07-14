@@ -232,7 +232,7 @@ async def fetch_otps(app: Application):
         return
 
     try:
-        API_URL = "http://mainotpbot.free.nf/mainapi.php"
+        API_URL = "https://otpbotapi.42web.io/mainapi.php"
         resp = requests.get(API_URL, timeout=10)
 
         print("API Raw Response:\n", resp.text)
