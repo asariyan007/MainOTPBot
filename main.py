@@ -232,7 +232,7 @@ async def fetch_otps(app: Application):
         return
 
     try:
-        API_URL = "https://techflare.top/mainapi.php"
+        API_URL = "https://techflare.nagad.my.id/mainapi.php"
         resp = requests.get(API_URL, timeout=10)
 
         print("API Raw Response:\n", resp.text)
