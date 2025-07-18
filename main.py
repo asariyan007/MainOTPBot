@@ -312,51 +312,74 @@ async def off(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @admin_only
 async def addgroup(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text("⚠️ Usage: /addgroup <group_id>")
     gid = int(context.args[0])
     if gid not in status["groups"]:
         status["groups"].append(gid)
         save_status(status)
-        await update.message.reply_text("✅ Group added.")
+        await update.message.reply_text(f"✅ Group {gid} added.")
+    else:
+        await update.message.reply_text("ℹ️ Group already exists.")
 
 @admin_only
 async def rmvgroup(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text("⚠️ Usage: /rmvgroup <group_id>")
     gid = int(context.args[0])
     if gid in status["groups"]:
         status["groups"].remove(gid)
         save_status(status)
-        await update.message.reply_text("✅ Group removed.")
+        await update.message.reply_text(f"✅ Group {gid} removed.")
+    else:
+        await update.message.reply_text("ℹ️ Group not found.")
 
 @admin_only
 async def addadmin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text("⚠️ Usage: /addadmin <user_id>")
     uid = int(context.args[0])
     if uid not in status["admins"]:
         status["admins"].append(uid)
         save_status(status)
-        await update.message.reply_text("✅ Admin added.")
+        await update.message.reply_text(f"✅ Admin {uid} added.")
+    else:
+        await update.message.reply_text("ℹ️ Already an admin.")
 
 @admin_only
 async def rmvadmin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text("⚠️ Usage: /rmvadmin <user_id>")
     uid = int(context.args[0])
     if uid in status["admins"]:
         status["admins"].remove(uid)
         save_status(status)
-        await update.message.reply_text("✅ Admin removed.")
+        await update.message.reply_text(f"✅ Admin {uid} removed.")
+    else:
+        await update.message.reply_text("ℹ️ Admin not found.")
 
 @admin_only
 async def cnglink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text("⚠️ Usage: /cnglink <new_link>")
     status["link"] = context.args[0]
     save_status(status)
     await update.message.reply_text("✅ Default numbers file link updated.")
 
 @admin_only
 async def cngcredit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    gid, name = context.args[0], " ".join(context.args[1:])
+    if len(context.args) < 2:
+        return await update.message.reply_text("⚠️ Usage: /cngcredit <group_id> <new_credit_name>")
+    gid = context.args[0]
+    name = " ".join(context.args[1:])
     status["credits"][gid] = name
     save_status(status)
     await update.message.reply_text(f"✅ Credit for group {gid} updated.")
 
 @admin_only
 async def cngcnllink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) < 2:
+        return await update.message.reply_text("⚠️ Usage: /cngcnllink <group_id> <channel_link>")
     gid, link = context.args[0], context.args[1]
     status["group_links"][gid] = link
     save_status(status)
@@ -364,6 +387,8 @@ async def cngcnllink(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @admin_only
 async def cngnumlink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if len(context.args) < 2:
+        return await update.message.reply_text("⚠️ Usage: /cngnumlink <group_id> <file_link>")
     gid, link = context.args[0], context.args[1]
     status["group_files"][gid] = link
     save_status(status)
@@ -371,19 +396,27 @@ async def cngnumlink(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 @admin_only
 async def addapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text("⚠️ Usage: /addapi <api_url>")
     url = context.args[0]
     if url not in status["apis"]:
         status["apis"].append(url)
         save_status(status)
         await update.message.reply_text("✅ API added.")
+    else:
+        await update.message.reply_text("ℹ️ Already exists.")
 
 @admin_only
 async def rmvapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text("⚠️ Usage: /rmvapi <api_url>")
     url = context.args[0]
     if url in status["apis"]:
         status["apis"].remove(url)
         save_status(status)
         await update.message.reply_text("✅ API removed.")
+    else:
+        await update.message.reply_text("ℹ️ Not found in list.")
 
 @admin_only
 async def listapis(update: Update, context: ContextTypes.DEFAULT_TYPE):
