@@ -417,6 +417,19 @@ async def rmvapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ API removed.")
     else:
         await update.message.reply_text("ℹ️ Not found in list.")
+        
+ @admin_only
+async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    on_off = "✅ ON" if status["on"] else "⛔ OFF"
+    groups = "\n".join(str(g) for g in status.get("groups", []))
+    apis = "\n".join(status.get("apis", []))
+    await update.message.reply_text(
+        f"📊 <b>Bot Status</b>\n"
+        f"• Status: {on_off}\n"
+        f"• Groups:\n{groups or 'No groups'}\n"
+        f"• APIs:\n{apis or 'No APIs'}",
+        parse_mode="HTML"
+    )
 
 @admin_only
 async def listapis(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -433,7 +446,7 @@ async def main():
         ("start", start), ("on", on), ("off", off), ("addgroup", addgroup),
         ("rmvgroup", rmvgroup), ("addadmin", addadmin), ("rmvadmin", rmvadmin),
         ("cnglink", cnglink), ("cngcredit", cngcredit), ("cngcnllink", cngcnllink),
-        ("cngnumlink", cngnumlink), ("addapi", addapi), ("rmvapi", rmvapi),
+        ("cngnumlink", cngnumlink), ("addapi", addapi), ("rmvapi", rmvapi), ("status", status_cmd),
         ("listapis", listapis), ("admins", admins)
     ]
     for cmd, func in handlers:
