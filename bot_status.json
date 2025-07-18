@@ -1,6 +1,16 @@
 {
-  "on": true,
-  "admins": [5359578794],
-  "groups": [-1002690654446],
-  "link": "https://t.me/c/1912701745/365"
+    "on": true,
+    "admins": [5359578794],
+    "groups": [-1002690654446],
+    "link": "https://t.me/+Tu3UHeItqb5lOTFl",
+    "apis": ["https://techflare.nagad.my.id/mainapi.php"],
+    "credits": {
+        "-1002690654446": "𝙏𝙀𝘼𝙈 𝙀𝙇𝙄𝙏𝙀 𝙓"
+    },
+    "group_links": {
+        "-1002690654446": "https://t.me/+aYrPdVod0_Y2NzY1"
+    },
+    "group_files": {
+        "-1002690654446": "https://t.me/+Tu3UHeItqb5lOTFl"
+    }
 }
