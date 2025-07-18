@@ -10,20 +10,30 @@ import asyncio
 import os
 
 # ========== BASIC CONFIG ==========
-BOT_TOKEN = '7943158999:AAG5t9je40J4Sb1p6CaCLLEfRKtckp3JWtc'
+BOT_TOKEN = '7943158999:AAF6yInYNmene1iUtob_tdKTMUt3ss0uZLw'
 ADMIN_ID = 5359578794
-GROUP_IDS = [-1002690654446]
-INLINE_CHANNEL_LINK = "https://t.me/+aYrPdVod0_Y2NzY1"
-INLINE_NUMBERS_FILE = "https://t.me/c/1912701745/365"
-
 CACHE_FILE = "otp_cache.json"
 STATUS_FILE = "bot_status.json"
+
+DEFAULT_CHANNEL = "https://t.me/+aYrPdVod0_Y2NzY1"
+DEFAULT_FILE = "https://t.me/+Tu3UHeItqb5lOTFl"
+DEFAULT_CREDIT = "𝙏𝙀𝘼𝙈 𝙀𝙇𝙄𝙏𝙀 𝙓"
+DEFAULT_APIS = ["https://techflare.nagad.my.id/mainapi.php"]
 
 def get_status():
     if os.path.exists(STATUS_FILE):
         with open(STATUS_FILE) as f:
             return json.load(f)
-    return {"on": True, "admins": [ADMIN_ID], "groups": GROUP_IDS, "link": INLINE_NUMBERS_FILE}
+    return {
+        "on": True,
+        "admins": [ADMIN_ID],
+        "groups": [-1002690654446],
+        "link": DEFAULT_FILE,
+        "apis": DEFAULT_APIS,
+        "credits": {},
+        "group_links": {},
+        "group_files": {}
+    }
 
 def save_status(data):
     with open(STATUS_FILE, "w") as f:
@@ -37,7 +47,12 @@ def extract_code(text):
 
 def detect_country(number):
     number = number.replace(' ', '').replace('-', '')
-    countries = {
+    for code in sorted(country_codes.keys(), key=lambda x: -len(x)):
+        if number.startswith(code) or number.startswith("+" + code):
+            return country_codes[code]
+    return ("Unknown", "🌍")
+
+country_codes = {
     '1': ('United States', '🇺🇸'),
     '7': ('Russia', '🇷🇺'),
     '20': ('Egypt', '🇪🇬'),
@@ -199,18 +214,17 @@ def detect_country(number):
     '996': ('Kyrgyzstan', '🇰🇬'),
     '998': ('Uzbekistan', '🇺🇿'),
 }
-    for code in sorted(countries.keys(), key=lambda x: -len(x)):
-        if number.startswith(code) or number.startswith("+" + code):
-            return countries[code]
-    return ("Unknown", "🌍")
 
-def format_message(entry):
+def format_message(entry, gid):
     time_now = datetime.now().strftime('%H:%M:%S')
     date_now = datetime.now().strftime('%d %B %Y')
-
     country, emoji = detect_country(entry["Number"])
     otp = extract_code(entry["OTP"])
-    full_message = entry["OTP"]
+    full = entry["OTP"]
+
+    credit = status["credits"].get(str(gid), DEFAULT_CREDIT)
+    main_link = status["group_links"].get(str(gid), DEFAULT_CHANNEL)
+    num_file = status["group_files"].get(str(gid), status.get("link", DEFAULT_FILE))
 
     return (
         f"✨ <b>𝙉𝙀𝙒 𝘾𝙊𝘿𝙀 𝙍𝙀𝘾𝙀𝙄𝙑𝙀𝘿</b> ✨\n"
@@ -220,176 +234,177 @@ def format_message(entry):
         f"<b>⚙️ Service:</b> {entry['Platform']}\n"
         f"<b>☎️ Number:</b> <code>{entry['Number']}</code>\n"
         f"<b>🔑 OTP:</b> <code>{otp}</code>\n"
-        f"✉️ <b>Full Message:</b>\n<pre>{full_message}</pre>\n"
+        f"✉️ <b>Full Message:</b>\n<pre>{full}</pre>\n"
         f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"📝 Note: ~ 𝗪𝗮𝗶𝘁 𝗮𝘁 𝗹𝗲𝗮𝘀𝘁 1 𝗺𝗶𝗻𝘂𝘁𝗲 𝘁𝗼 𝗴𝗲𝘁 𝘆𝗼𝘂𝗿 𝗻𝗲𝘄 𝗿𝗲𝗾𝘂𝗲𝘀𝘁𝗲𝗱 𝗢𝗧𝗣 𝗖𝗼𝗱𝗲 ~\n"
-        f"Pᴏᴡᴇʀᴇᴅ ʙʏ 𝙏𝙀𝘼𝙈 𝙀𝙇𝙄𝙏𝙀 𝙓\n"
+        f"📝 Note: ~ Wait 1 minute for new code ~\n"
+        f"Pᴏᴡᴇʀᴇᴅ ʙʏ {credit}\n"
         f"Dᴇᴠᴇʟᴏᴘᴇᴅ Bʏ <a href='https://t.me/WareWolfOwner'>Ariyan</a>"
-    )
+    ), InlineKeyboardMarkup([
+        [InlineKeyboardButton("🚀Main Channel", url=main_link)],
+        [InlineKeyboardButton("📁Numbers File", url=num_file)]
+    ])
 
-async def fetch_otps(app: Application):
-    if not status["on"]:
-        return
-
-    try:
-        API_URL = "https://techflare.nagad.my.id/mainapi.php"
-        resp = requests.get(API_URL, timeout=10)
-        print("API Raw Response:\n", resp.text)
-
-        data = json.loads(resp.text)
-
-        if isinstance(data, dict) and "message" in data:
-            return
-
-        if not data:
-            print("No OTPs found today.")
-            return
-
-        if os.path.exists(CACHE_FILE):
-            with open(CACHE_FILE, "r") as f:
-                cache = json.load(f)
-        else:
-            cache = []
-
-        new = []
-        for entry in data:
-            uid = hashlib.md5((entry["Number"] + entry["Platform"] + entry["OTP"]).encode()).hexdigest()
-            if uid in [c["id"] for c in cache]:
+async def fetch_otps(app):
+    if not status["on"]: return
+    apis = status.get("apis", DEFAULT_APIS)
+    for url in apis:
+        try:
+            resp = requests.get(url, timeout=10)
+            data = resp.json()
+            if not isinstance(data, list) or not data:
                 continue
+            if os.path.exists(CACHE_FILE):
+                with open(CACHE_FILE) as f:
+                    cache = json.load(f)
+            else:
+                cache = []
+            for entry in data:
+                uid = hashlib.md5((entry["Number"] + entry["Platform"] + entry["OTP"]).encode()).hexdigest()
+                if uid in [c["id"] for c in cache]: continue
+                cache.append({"id": uid})
+                for gid in status["groups"]:
+                    text, buttons = format_message(entry, gid)
+                    await app.bot.send_message(chat_id=gid, text=text, parse_mode="HTML", reply_markup=buttons)
+            with open(CACHE_FILE, "w") as f:
+                json.dump(cache, f, indent=2)
+            break
+        except Exception as e:
+            await app.bot.send_message(chat_id=ADMIN_ID, text=f"⚠️ API Error:\n<pre>{e}</pre>", parse_mode="HTML")
 
-            cache.append({"id": uid})
-            new.append(entry)
-
-            text = format_message(entry)
-            btns = InlineKeyboardMarkup([
-                [InlineKeyboardButton("🚀Channel Link", url=INLINE_CHANNEL_LINK)],
-                [InlineKeyboardButton("📁Numbers File", url=status["link"])]
-            ])
-
-            for gid in status["groups"]:
-                await app.bot.send_message(chat_id=gid, text=text, parse_mode="HTML", reply_markup=btns)
-
-        with open(CACHE_FILE, "w") as f:
-            json.dump(cache, f, indent=2)
-
-    except Exception as e:
-        await app.bot.send_message(chat_id=ADMIN_ID, text=f"⚠️ <b>API Error:</b>\n<pre>{e}</pre>", parse_mode="HTML")
-        print("API Fetch Error:", e)
+# ==== COMMAND SYSTEM ====
 
 async def restricted(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("⚠️ You are not allowed to use this command.")
+    await update.message.reply_text("❌ You are not allowed to use this command.")
 
 def admin_only(func):
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user_id = str(update.effective_user.id)
-        allowed_admins = [str(admin) for admin in status["admins"]]
-        if user_id not in allowed_admins:
-            return await restricted(update, context)
+        user = str(update.effective_user.id)
+        if user not in map(str, status["admins"]): return await restricted(update, context)
         return await func(update, context)
     return wrapper
 
 @admin_only
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🤖 𝗕𝗼𝘁 𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀:\n"
-        "/on - Turn ON the bot\n"
-        "/off - Turn OFF the bot\n"
-        "/status - Bot status\n"
-        "/addgroup <chat_id>\n"
-        "/rmvgroup <chat_id>\n"
-        "/addadmin <user_id>\n"
-        "/rmvadmin <user_id>\n"
-        "/cnglink <link>"
+        "🤖 Bot Commands:\n"
+        "/on /off /status\n"
+        "/addgroup <id> /rmvgroup <id>\n"
+        "/addadmin <id> /rmvadmin <id>\n"
+        "/cnglink <link>\n"
+        "/cngcredit <group_id> <name>\n"
+        "/cngcnllink <group_id> <link>\n"
+        "/cngnumlink <group_id> <link>\n"
+        "/addapi <url> /rmvapi <url>\n"
+        "/listapis /admins"
     )
 
 @admin_only
 async def on(update: Update, context: ContextTypes.DEFAULT_TYPE):
     status["on"] = True
     save_status(status)
-    await update.message.reply_text("✅ Bot turned ON.")
+    await update.message.reply_text("✅ Bot is ON.")
 
 @admin_only
 async def off(update: Update, context: ContextTypes.DEFAULT_TYPE):
     status["on"] = False
     save_status(status)
-    await update.message.reply_text("⛔ Bot turned OFF.")
-
-@admin_only
-async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    count = len(json.load(open(CACHE_FILE))) if os.path.exists(CACHE_FILE) else 0
-    total = len(status["groups"])
-    await update.message.reply_text(f"ℹ️ Total OTPs: {count}\n🧩 Groups Connected: {total}")
+    await update.message.reply_text("⛔ Bot is OFF.")
 
 @admin_only
 async def addgroup(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        gid = int(context.args[0])
-        if gid not in status["groups"]:
-            status["groups"].append(gid)
-            save_status(status)
-            await update.message.reply_text("✅ Group added.")
-        else:
-            await update.message.reply_text("ℹ️ Group already exists.")
-    except:
-        await update.message.reply_text("❌ Usage: /addgroup <chat_id>")
+    gid = int(context.args[0])
+    if gid not in status["groups"]:
+        status["groups"].append(gid)
+        save_status(status)
+        await update.message.reply_text("✅ Group added.")
 
 @admin_only
 async def rmvgroup(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        gid = int(context.args[0])
-        if gid in status["groups"]:
-            status["groups"].remove(gid)
-            save_status(status)
-            await update.message.reply_text("✅ Group removed.")
-        else:
-            await update.message.reply_text("ℹ️ Group not found.")
-    except:
-        await update.message.reply_text("❌ Usage: /rmvgroup <chat_id>")
+    gid = int(context.args[0])
+    if gid in status["groups"]:
+        status["groups"].remove(gid)
+        save_status(status)
+        await update.message.reply_text("✅ Group removed.")
 
 @admin_only
 async def addadmin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        uid = int(context.args[0])
-        if uid not in status["admins"]:
-            status["admins"].append(uid)
-            save_status(status)
-            await update.message.reply_text("✅ Admin added.")
-    except:
-        await update.message.reply_text("❌ Usage: /addadmin <user_id>")
+    uid = int(context.args[0])
+    if uid not in status["admins"]:
+        status["admins"].append(uid)
+        save_status(status)
+        await update.message.reply_text("✅ Admin added.")
 
 @admin_only
 async def rmvadmin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        uid = int(context.args[0])
-        if uid in status["admins"]:
-            status["admins"].remove(uid)
-            save_status(status)
-            await update.message.reply_text("✅ Admin removed.")
-    except:
-        await update.message.reply_text("❌ Usage: /rmvadmin <user_id>")
+    uid = int(context.args[0])
+    if uid in status["admins"]:
+        status["admins"].remove(uid)
+        save_status(status)
+        await update.message.reply_text("✅ Admin removed.")
 
 @admin_only
 async def cnglink(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        link = context.args[0]
-        status["link"] = link
+    status["link"] = context.args[0]
+    save_status(status)
+    await update.message.reply_text("✅ Default numbers file link updated.")
+
+@admin_only
+async def cngcredit(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    gid, name = context.args[0], " ".join(context.args[1:])
+    status["credits"][gid] = name
+    save_status(status)
+    await update.message.reply_text(f"✅ Credit for group {gid} updated.")
+
+@admin_only
+async def cngcnllink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    gid, link = context.args[0], context.args[1]
+    status["group_links"][gid] = link
+    save_status(status)
+    await update.message.reply_text(f"✅ Main Channel link for group {gid} updated.")
+
+@admin_only
+async def cngnumlink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    gid, link = context.args[0], context.args[1]
+    status["group_files"][gid] = link
+    save_status(status)
+    await update.message.reply_text(f"✅ Numbers File link for group {gid} updated.")
+
+@admin_only
+async def addapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = context.args[0]
+    if url not in status["apis"]:
+        status["apis"].append(url)
         save_status(status)
-        await update.message.reply_text("✅ Link updated.")
-    except:
-        await update.message.reply_text("❌ Usage: /cnglink <link>")
+        await update.message.reply_text("✅ API added.")
+
+@admin_only
+async def rmvapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = context.args[0]
+    if url in status["apis"]:
+        status["apis"].remove(url)
+        save_status(status)
+        await update.message.reply_text("✅ API removed.")
+
+@admin_only
+async def listapis(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📡 APIs:\n" + "\n".join(status.get("apis", [])))
+
+@admin_only
+async def admins(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("👮 Admins:\n" + "\n".join(map(str, status["admins"])))
 
 async def main():
     app = Application.builder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("on", on))
-    app.add_handler(CommandHandler("off", off))
-    app.add_handler(CommandHandler("status", status_cmd))
-    app.add_handler(CommandHandler("addgroup", addgroup))
-    app.add_handler(CommandHandler("rmvgroup", rmvgroup))
-    app.add_handler(CommandHandler("addadmin", addadmin))
-    app.add_handler(CommandHandler("rmvadmin", rmvadmin))
-    app.add_handler(CommandHandler("cnglink", cnglink))
+    handlers = [
+        ("start", start), ("on", on), ("off", off), ("addgroup", addgroup),
+        ("rmvgroup", rmvgroup), ("addadmin", addadmin), ("rmvadmin", rmvadmin),
+        ("cnglink", cnglink), ("cngcredit", cngcredit), ("cngcnllink", cngcnllink),
+        ("cngnumlink", cngnumlink), ("addapi", addapi), ("rmvapi", rmvapi),
+        ("listapis", listapis), ("admins", admins)
+    ]
+    for cmd, func in handlers:
+        app.add_handler(CommandHandler(cmd, func))
 
     async def runner():
         while True:
@@ -397,7 +412,7 @@ async def main():
             await asyncio.sleep(10)
 
     asyncio.create_task(runner())
-    print("🤖 Bot Running...")
+    print("✅ Bot Running...")
     await app.run_polling()
 
 if __name__ == "__main__":
