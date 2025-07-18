@@ -52,6 +52,7 @@ def detect_country(number):
             return country_codes[code]
     return ("Unknown", "🌍")
 
+# Only showing partial country_codes here due to size limits
 country_codes = {
     '1': ('United States', '🇺🇸'),
     '7': ('Russia', '🇷🇺'),
@@ -417,8 +418,8 @@ async def rmvapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ API removed.")
     else:
         await update.message.reply_text("ℹ️ Not found in list.")
-        
- @admin_only
+
+@admin_only
 async def status_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     on_off = "✅ ON" if status["on"] else "⛔ OFF"
     groups = "\n".join(str(g) for g in status.get("groups", []))
@@ -446,8 +447,8 @@ async def main():
         ("start", start), ("on", on), ("off", off), ("addgroup", addgroup),
         ("rmvgroup", rmvgroup), ("addadmin", addadmin), ("rmvadmin", rmvadmin),
         ("cnglink", cnglink), ("cngcredit", cngcredit), ("cngcnllink", cngcnllink),
-        ("cngnumlink", cngnumlink), ("addapi", addapi), ("rmvapi", rmvapi), ("status", status_cmd),
-        ("listapis", listapis), ("admins", admins)
+        ("cngnumlink", cngnumlink), ("addapi", addapi), ("rmvapi", rmvapi),
+        ("status", status_cmd), ("listapis", listapis), ("admins", admins)
     ]
     for cmd, func in handlers:
         app.add_handler(CommandHandler(cmd, func))
