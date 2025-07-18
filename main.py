@@ -10,7 +10,7 @@ import asyncio
 import os
 
 # ========== BASIC CONFIG ==========
-BOT_TOKEN = '7943158999:AAF6yInYNmene1iUtob_tdKTMUt3ss0uZLw'
+BOT_TOKEN = '7943158999:AAG5t9je40J4Sb1p6CaCLLEfRKtckp3JWtc'
 ADMIN_ID = 5359578794
 CACHE_FILE = "otp_cache.json"
 STATUS_FILE = "bot_status.json"
