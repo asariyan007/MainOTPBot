@@ -236,7 +236,7 @@ def format_message(entry, gid):
         f"<b>☎️ Number:</b> <code>{entry['Number']}</code>\n"
         f"<b>🔑 OTP:</b> <code>{otp}</code>\n"
         f"✉️ <b>Full Message:</b>\n<pre>{full}</pre>\n"
-        f"━━━━━━━━━━━━━━━━━━━━━\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📝 Note: ~ Wait 1 minute for new code ~\n"
         f"Pᴏᴡᴇʀᴇᴅ ʙʏ {credit}\n"
         f"Dᴇᴠᴇʟᴏᴘᴇᴅ Bʏ <a href='https://t.me/WareWolfOwner'>Ariyan</a>"
